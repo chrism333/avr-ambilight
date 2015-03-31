@@ -21,40 +21,213 @@
  * SOFTWARE.
  */
 
+#include "ambilight.hpp"
+
 #include <xpcc/architecture/platform.hpp>
 #include <xpcc/io/iostream.hpp>
 
 #include <avr/wdt.h>
 
+
+
 using namespace xpcc::atmega;
 typedef xpcc::avr::SystemClock systemClock;
 
+// Use the I2C device as a master with a baudrate of 100.000
+
+
+
+//     static void setRgbLed(uint8_t led, uint8_t r, uint8_t g, uint8_t b)
+//     {
+//         if ( led < numRgbLeds)
+//         {
+//             uint8_t controllerId  = led / numControllerRgbLeds;
+//             uint8_t controllerLed = led % numControllerRgbLeds;
+//
+//             uint16_t red   = static_cast<uint16_t>(r) << 4;
+//             uint16_t green = static_cast<uint16_t>(g) << 4;
+//             uint16_t blue  = static_cast<uint16_t>(b) << 4;
+//
+//             // because of the PCB design Leds need to be mapped to pwm channels
+//             switch (controllerLed)
+//             {
+//             case 0:
+//                 controller[controllerId].setChannel(2, red);
+//                 controller[controllerId].setChannel(1, green);
+//                 controller[controllerId].setChannel(0, blue);
+//                 break;
+//             case 1:
+//                 controller[controllerId].setChannel(3, red);
+//                 controller[controllerId].setChannel(4, green);
+//                 controller[controllerId].setChannel(5, blue);
+//                 break;
+//             case 2:
+//                 controller[controllerId].setChannel(9, red);
+//                 controller[controllerId].setChannel(7, green);
+//                 controller[controllerId].setChannel(6, blue);
+//                 break;
+//             case 3:
+//                 controller[controllerId].setChannel(12, red);
+//                 controller[controllerId].setChannel(11, green);
+//                 controller[controllerId].setChannel(10, blue);
+//                 break;
+//             case 4:
+//                 controller[controllerId].setChannel(13, red);
+//                 controller[controllerId].setChannel(14, green);
+//                 controller[controllerId].setChannel(15, blue);
+//                 break;
+//             default:
+//                 break;
+//             }
+//         }
+//     }
+//
+//     static void setRedLed(uint8_t led, uint16_t r)
+//     {
+//         if ( led < numRgbLeds)
+//         {
+//             uint8_t controllerId  = led / numControllerRgbLeds;
+//             uint8_t controllerLed = led % numControllerRgbLeds;
+//
+//             // because of the PCB design Leds need to be mapped to pwm channels
+//             switch (controllerLed)
+//             {
+//             case 0:
+//                 controller[controllerId].setChannel(2, r);
+//                 break;
+//             case 1:
+//                 controller[controllerId].setChannel(3, r);
+//                 break;
+//             case 2:
+//                 controller[controllerId].setChannel(9, r);
+//                 break;
+//             case 3:
+//                 controller[controllerId].setChannel(12, r);
+//                 break;
+//             case 4:
+//                 controller[controllerId].setChannel(13, r);
+//                 break;
+//             default:
+//                 break;
+//             }
+//         }
+//     }
+//
+//     static void setGreenLed(uint8_t led, uint16_t g)
+//     {
+//         if ( led < numRgbLeds)
+//         {
+//             uint8_t controllerId  = led / numControllerRgbLeds;
+//             uint8_t controllerLed = led % numControllerRgbLeds;
+//
+//             // because of the PCB design Leds need to be mapped to pwm channels
+//             switch (controllerLed)
+//             {
+//             case 0:
+//                 controller[controllerId].setChannel(1, g);
+//                 break;
+//             case 1:
+//                 controller[controllerId].setChannel(4, g);
+//                 break;
+//             case 2:
+//                 controller[controllerId].setChannel(7, g);
+//                 break;
+//             case 3:
+//                 controller[controllerId].setChannel(11, g);
+//                 break;
+//             case 4:
+//                 controller[controllerId].setChannel(14, g);
+//                 break;
+//             default:
+//                 break;
+//             }
+//         }
+//     }
+//
+//     static void setBlueLed(uint8_t led, uint16_t b)
+//     {
+//         if ( led < numRgbLeds)
+//         {
+//             uint8_t controllerId  = led / numControllerRgbLeds;
+//             uint8_t controllerLed = led % numControllerRgbLeds;
+//
+//             // because of the PCB design Leds need to be mapped to pwm channels
+//             switch (controllerLed)
+//             {
+//             case 0:
+//                 controller[controllerId].setChannel(0, b);
+//                 break;
+//             case 1:
+//                 controller[controllerId].setChannel(5, b);
+//                 break;
+//             case 2:
+//                 controller[controllerId].setChannel(6, b);
+//                 break;
+//             case 3:
+//                 controller[controllerId].setChannel(10, b);
+//                 break;
+//             case 4:
+//                 controller[controllerId].setChannel(15, b);
+//                 break;
+//             default:
+//                 break;
+//             }
+//         }
+//     }
+
+
 int main()
 {
-    // Create a new UART object and configure it to a baudrate of 38400
+    // Create a new UART object and configure it to a baudrate of 38.400
     Uart0 uart;
-    uart.initialize<systemClock, 38400>();
+    uart.initialize<systemClock, 38'400>();
 
-    // Enable interrupts, this is needed for every buffered UART
-    sei();
+    // Set-up the I2C device as master and configure it to a baudrate of 100.000
+    I2cMaster::initialize<systemClock, 500'000>();
 
     // Create a IOStream for complex formatting tasks
     xpcc::IODeviceWrapper< Uart0, xpcc::IOBuffer::BlockIfFull > device;
     xpcc::IOStream stream(device);
 
-    // Now we can print numbers and other objects to the stream
-    // The following will result in the string "24 is a nice number!\n" with
-    // the number formatted as ASCII text.
     stream << "Hello World!" << xpcc::endl;
+
+    // Enable interrupts
+    sei();
+
+    wdt_enable(WDTO_1S);
+    wdt_reset();
+
+    Ambilight ambilight;
+
+    uint16_t x;
 
     while (true)
     {
         /*
          * For some reason the Watchdog on my device is always enabled (although
-         * WDTON is not programmed). Therefore the Watchdogs needs to be reset
+         * WDTON is not programmed). Therefore the Watchdog needs to be reset
          * regulary.
          */
 
         wdt_reset();
+
+        ambilight.run();
+
+        x++;
+        if(x == 100)
+        {
+            x = 0;
+            for(int i = 0; i < 30; i++)
+            {
+                uint16_t tmp = ambilight.leds[i].getBlue();
+                if(tmp ==0xfff)
+                    tmp = 0;
+                else
+                    tmp++;
+
+                ambilight.leds[i].setBlue(tmp);
+            }
+        }
+
     }
 }
