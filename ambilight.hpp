@@ -28,14 +28,19 @@
 
 #include "rgbled.hpp"
 
-struct Ambilight : public xpcc::pt::Protothread
+template<class I2cMaster>
+class Ambilight : public xpcc::pt::Protothread
 {
+  public:
+
     static constexpr uint8_t controllerBaseAddress = 80;
     static constexpr uint8_t numControllers = 6;
     static constexpr uint8_t numControllerRgbLeds = 5;
     static constexpr uint8_t numRgbLeds = numControllers * numControllerRgbLeds;
 
-    xpcc::Pca9685<xpcc::atmega::I2cMaster> controller[numControllers] =
+  private:
+
+    xpcc::Pca9685<I2cMaster> controller[numControllers] =
         { {controllerBaseAddress + 0},
           {controllerBaseAddress + 1},
           {controllerBaseAddress + 2},
@@ -43,7 +48,11 @@ struct Ambilight : public xpcc::pt::Protothread
           {controllerBaseAddress + 4},
           {controllerBaseAddress + 5} };
 
-    RgbLed leds[numRgbLeds] = {};
+    RgbLed* leds;
+
+  public:
+
+    Ambilight(RgbLed* _leds) : leds(_leds) {}
 
     uint8_t getController(uint8_t led) { return led / numControllerRgbLeds; }
 
