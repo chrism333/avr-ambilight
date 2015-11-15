@@ -25,6 +25,7 @@
 
 #include <xpcc/architecture/platform.hpp>
 #include <xpcc/driver/pwm/pca9685.hpp>
+#include <xpcc/processing/protothread/protothread.hpp>
 
 #include "rgbled.hpp"
 
@@ -93,6 +94,9 @@ class Ambilight : public xpcc::pt::Protothread
 
         while (true)
         {
+            for (c = 0; c < numControllers; c++)
+                PT_CALL(controller[c].initialize(0, xpcc::pca9685::MODE2_INVRT));
+
             for (led = 0; led < numRgbLeds; led++)
             {
                 c = getController(led);

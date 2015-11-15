@@ -50,7 +50,7 @@ int main()
     // Enable interrupts
     sei();
 
-    wdt_enable(WDTO_1S);
+    wdt_enable(WDTO_250MS);
     wdt_reset();
 
     RgbLed leds[30] = {};
@@ -60,11 +60,10 @@ int main()
     while (true)
     {
         /*
-         * For some reason the Watchdog on my device is always enabled (although
-         * WDTON is not programmed). Therefore the Watchdog needs to be reset
-         * regulary.
+         * For some reason (TM) the Watchdog on my device is always enabled
+         * (although WDTON is not programmed). Therefore, the Watchdog needs to
+         * be reset regulary.
          */
-
         wdt_reset();
 
         ambilight.run();

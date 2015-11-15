@@ -43,9 +43,9 @@ class Mono : public xpcc::pt::Protothread
     {
         static uint8_t led = 0;
 
-        PT_BEGIN();
+        static uint8_t data;
 
-        uint8_t data;
+        PT_BEGIN();
 
         while (true)
         {
